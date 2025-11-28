@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>山海寻灵 | Dy搜立正</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/leaflet/1.9.4/leaflet.min.css" rel="stylesheet">
+    <link href="https://fonts.loli.net/css2?family=ZCOOL+XiaoWei&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    
+    <div class="paper-texture"></div>
+    <canvas id="particle-canvas"></canvas>
+    <div id="cursor-dot"></div>
+    <div id="cursor-outline"></div>
+
+    <div id="intro-gate">
+        <div class="loader-wrapper">
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+        </div>
+        <div class="loader-text">山海寻灵</div>
+    </div>
+
+    <nav class="navbar">
+        <div class="logo"><i class="fa-solid fa-dragon"></i> <span>星梦宝册v3.1</span></div>
+        <div class="nav-items">	
+            <button class="nav-btn active" onclick="switchView('home', this)" data-hover><i class="fa-solid fa-house"></i> 首页</button>
+            <button class="nav-btn" onclick="switchView('dex', this)" data-hover><i class="fa-solid fa-book-journal-whills"></i> 啾灵图鉴</button>
+            <button class="nav-btn" onclick="switchView('craft', this)" data-hover><i class="fa-solid fa-scroll"></i> 天工造物</button>
+            <button class="nav-btn" onclick="switchView('map', this)" data-hover><i class="fa-solid fa-map-location"></i> 山海大陆</button>
+            <button class="nav-btn" onclick="switchView('breed', this)" data-hover><i class="fa-solid fa-yin-yang"></i> 啾灵融合</button>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div id="home" class="view-section active">
+            <div class="home-dashboard">
+                <div class="hero-banner" data-hover>
+                    <div class="hero-content">
+                        <h1 style="margin:0 0 10px 0; font-size:32px; color:var(--accent);">欢迎回到山海大陆</h1>
+                        <p style="margin:0; opacity:0.9; font-size:16px;">捕捉灵兽，记录奇迹 | 当前版本 v3.1</p>
+                    </div>
+                    <div class="hero-icon" style="font-size:100px; color:rgba(255,255,255,0.1); transform: rotate(-15deg);"><i class="fa-solid fa-scroll"></i></div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:30px;">
+                    <div class="panel-box">
+                        <div class="panel-header" style="display:flex; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                            <span style="font-size:18px; font-weight:bold; color:var(--primary);"><i class="fa-solid fa-bullhorn" style="color:var(--accent); margin-right:8px;"></i> 最新邸报</span>
+                            <span style="font-size:12px; color:#999; cursor:pointer;" data-hover>更多 ></span>
+                        </div>
+                        <div class="news-list" id="news-container"></div>
+                    </div>
+
+                    <div class="panel-box">
+                        <div class="panel-header" style="margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                            <span style="font-size:18px; font-weight:bold; color:var(--primary);"><i class="fa-solid fa-chart-pie" style="color:var(--accent); margin-right:8px;"></i> 观测报告</span>
+                        </div>
+                        <div class="report-stats">
+                            <div class="stat-box">
+                                <div class="stat-num" id="stat-count">0</div>
+                                <div class="stat-label">已收录啾灵</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-num" id="stat-seen">12</div>
+                                <div class="stat-label">今日目击</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-box">
+                    <div class="panel-header" style="margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                        <span style="font-size:18px; font-weight:bold; color:var(--primary);"><i class="fa-solid fa-compass" style="color:var(--accent); margin-right:8px;"></i> 探险手记</span>
+                    </div>
+                    <div class="guide-grid" id="guide-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="dex" class="view-section">
+            <div class="search-container">
+                <input type="text" class="glass-input" id="dexSearch" placeholder="布拿拿正在注视着你..." oninput="renderDex()">
+                <select class="glass-select" id="dexFilter" onchange="renderDex()" data-hover>
+                    <option value="all">全属性</option>
+                    <option value="金">金系</option>
+                    <option value="木">木系</option>
+                    <option value="水">水系</option>
+                    <option value="火">火系</option>
+                    <option value="土">土系</option>
+                    <option value="妖">妖系</option>
+                    <option value="龙">龙系</option>
+                </select>
+            </div>
+            <div id="dex-grid" class="grid-layout"></div>
+        </div>
+
+        <div id="craft" class="view-section">
+             <div class="search-container">
+                <input type="text" class="glass-input" id="craftSearch" placeholder="搜索配方 (如: 鞍具, 铁锭)..." oninput="renderCraft()">
+            </div>
+            <div id="recipe-list" class="recipe-list"></div>
+        </div>
+
+        <div id="map" class="view-section" style="padding:0; overflow: hidden;">
+            <div class="map-wrapper">
+                <div id="map-container" style="width:100%; height:100%; background:#a0d2ef;"></div>
+                <div class="map-layer-control">
+                    <div style="font-size: 14px; font-weight: bold; color: #555; border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:10px;">图层筛选</div>
+                    <div class="layer-toggle active" onclick="toggleLayer('orb', this)" data-hover><i class="fa-solid fa-circle" style="color:#00d2ff; width:20px;"></i> 灵珠</div>
+                    <div class="layer-toggle active" onclick="toggleLayer('chest', this)" data-hover><i class="fa-solid fa-box-open" style="color:#ffa500; width:20px;"></i> 宝箱</div>
+                    <div class="layer-toggle active" onclick="toggleLayer('teleport', this)" data-hover><i class="fa-solid fa-dungeon" style="color:#bd00ff; width:20px;"></i> 传送点</div>
+                     <div class="layer-toggle active" onclick="toggleLayer('user', this)" data-hover><i class="fa-solid fa-location-dot" style="color:#ff4757; width:20px;"></i> 野外boss</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="breed" class="view-section">
+            <div class="breed-stage">
+                <h2 style="color:var(--primary); margin-bottom:15px; font-size:28px;">啾灵融合公式</h2>
+                <p style="color:#888; font-style:italic;">天地交感，万物化生。选择父母灵兽进行推演。</p>
+                
+                <div class="calc-row">
+                    <select id="p1" class="calc-select" onchange="checkBreed()" data-hover><option>选择父本</option></select>
+                    <i class="fa-solid fa-plus icon-plus"></i>
+                    <select id="p2" class="calc-select" onchange="checkBreed()" data-hover><option>选择母本</option></select>
+                    <i class="fa-solid fa-arrow-right icon-eq"></i>
+                    <div class="result-egg-container">
+                        <div class="result-egg" id="result-egg"><i class="fa-solid fa-egg"></i></div>
+                        <div class="egg-glow"></div>
+                    </div>
+                </div>
+                <div id="result-name" style="margin-top:30px; font-size:26px; font-weight:bold; color:var(--primary);">???</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="marker-modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title" style="font-size:18px; font-weight:bold;">地点详情</div>
+                <div class="modal-close" onclick="closeModal()" data-hover style="cursor:pointer;"><i class="fa-solid fa-times"></i></div>
+            </div>
+            
+            <div class="modal-body" style="padding:25px; overflow-y:auto; max-height: 60vh;">
+                <div class="upload-area" onclick="document.getElementById('marker-img-input').click()" data-hover>
+                    <i class="fa-solid fa-cloud-arrow-up upload-icon" style="font-size:30px; color:#ccc; margin-bottom:10px;"></i>
+                    <div class="upload-text" style="color:#999; font-size:13px;">点击上传现场图片</div>
+                    <img id="marker-img-preview" class="upload-preview" alt="Preview">
+                    <input type="file" id="marker-img-input" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
+                </div>
+
+                <div class="form-group">
+                    <label style="display:block; font-size:12px; color:#888; margin-bottom:5px;">标记名称</label>
+                    <input type="text" id="marker-name" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label style="display:block; font-size:12px; color:#888; margin-bottom:5px;">标记类型</label>
+                    <select id="marker-type" class="form-select">
+                        <option value="user">🚩 野外boss</option>
+                        <option value="orb">🔵 灵珠</option>
+                        <option value="chest">📦 宝箱</option>
+                        <option value="teleport"⛩️ 传送点</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label style="display:block; font-size:12px; color:#888; margin-bottom:5px;">备注信息</label>
+                    <textarea id="marker-desc" class="form-textarea" style="height:60px; resize:none;"></textarea>
+                </div>
+                
+                <input type="hidden" id="marker-lat">
+                <input type="hidden" id="marker-lng">
+                <input type="hidden" id="marker-id">
+            </div>
+
+            <div class="modal-footer" style="padding:20px; background:#f9f9f9; display:flex; gap:10px;">
+                <button class="btn btn-primary" onclick="saveMarkerData()" data-hover>保存记录</button>
+                <button class="btn btn-danger" id="btn-delete" onclick="deleteCurrentMarker()" data-hover>删除</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="js/data.js"></script> <script src="js/map.js"></script>  <script src="js/app.js"></script>  </body>
+</html>
