@@ -545,3 +545,49 @@ body, html {
         padding: 5px 8px;
     }
 }
+/* ==================== 8. 主页 Dashboard 修改 ==================== */
+
+.hero-banner {
+    grid-column: 1 / -1;
+    /* 移除之前的 background 图片/渐变设置，改为相对定位容器 */
+    position: relative; 
+    overflow: hidden;
+    padding: 50px; 
+    border-radius: 24px; 
+    color: #fff;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    display: flex; justify-content: space-between; align-items: center;
+    transition: transform 0.3s;
+    /* 给一个底色，万一视频没加载出来 */
+    background: #2c2520; 
+}
+
+/* [新增] 视频样式 */
+.hero-video {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover; /* 关键：保证视频填满不变形 */
+    z-index: 0; /* 在最底层 */
+    opacity: 0.8; /* 稍微透明一点，融合背景 */
+}
+
+/* [新增] 遮罩层样式 */
+.hero-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    /* 左黑右透，保证文字清晰 */
+    background: linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%);
+    z-index: 1; /* 在视频之上，文字之下 */
+}
+
+/* 提升文字层级，防止被视频盖住 */
+.hero-content, .hero-icon {
+    position: relative;
+    z-index: 2;
+}
+
+/* 如果之前有 .hero-banner::after 请保留 none 或删除 */
+.hero-banner::after { display: none; }
+
