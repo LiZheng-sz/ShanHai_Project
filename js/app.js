@@ -225,4 +225,58 @@ function initParticles() {
         requestAnimationFrame(draw);
     }
     draw();
+
+}
+// ==================== 拖拽波纹特效增强 ====================
+
+let isDragging = false;
+let lastRippleTime = 0;
+
+// 1. 监听鼠标/手指按下
+document.addEventListener('mousedown', () => isDragging = true);
+document.addEventListener('touchstart', () => isDragging = true); // 手机适配
+
+// 2. 监听鼠标/手指抬起
+document.addEventListener('mouseup', () => isDragging = false);
+document.addEventListener('touchend', () => isDragging = false);  // 手机适配
+
+// 3. 监听移动 (核心逻辑)
+document.addEventListener('mousemove', (e) => handleDragRipple(e.clientX, e.clientY));
+document.addEventListener('touchmove', (e) => {
+    // 手机上 touchmove 可能包含多个触点
+    if(e.touches.length > 0) {
+        handleDragRipple(e.touches[0].clientX, e.touches[0].clientY);
+    }
+});
+
+function handleDragRipple(x, y) {
+    if (!isDragging) return; // 如果没按住，就不产生波纹
+
+    const now = Date.now();
+    // 节流阀：每 50 毫秒才产生一个波纹，防止浏览器卡死
+    if (now - lastRippleTime > 50) {
+        createRipple(x, y);
+        lastRippleTime = now;
+    }
+}
+
+// 封装原本的波纹生成逻辑
+function createRipple(x, y) {
+    const ripple = document.createElement('div');
+    ripple.className = 'ripple';
+    
+    // 稍微随机化大小，看起来更自然
+    const size = Math.random() * 50 + 50; // 50px 到 100px 之间
+    
+    ripple.style.width = ripple.style.height = `${size}px`;
+    ripple.style.left = `${x - size/2}px`;
+    ripple.style.top = `${y - size/2}px`;
+    
+    // 拖动时的波纹可以稍微颜色淡一点
+    ripple.style.background = 'rgba(212, 175, 55, 0.3)'; 
+    
+    document.body.appendChild(ripple);
+    
+    // 动画结束后移除
+    setTimeout(() => ripple.remove(), 600);
 }
