@@ -1,3 +1,19 @@
+const ELEMENT_ICONS = {
+    '金': '<img src="assets/metal.png" width="20">',
+    '木': '<img src="assets/wood.png" width="20">',
+    '土': '<img src="assets/earth.png" width="20">',
+    '水': '<img src="assets/water.png" width="20">',
+    '火': '<img src="assets/fire.png" width="20">',
+    '冰': '<img src="assets/Ice.png" width="20">',
+    '龙': '<img src="assets/dragon.png" width="20">',
+    '妖': '<img src="assets/yao.png" width="20">',
+    '无': '<img src="assets/none.png" width="20">',
+
+
+
+    // ... 其他属性
+};
+
 // ================= 数据中心 =================
 
 // ⚠️ 注意：这里我仅展示了部分数据，请将原文件中的完整数组复制过来
@@ -48,7 +64,7 @@ const spirits = [
             {"id": "044", "name": "碧海玄武", "el": "水", "job": "坦克", "tags": ["浇灌Lv5", "种植Lv4"], "desc": "古代书籍中记载的四大圣兽之一"},
             {"id": "045", "name": "狐娇娇", "el": "火", "job": "输出", "tags": ["搬运Lv1", "生火Lv2"], "desc": "它看起来就很傲娇，喜欢独来独往"},
             {"id": "046", "name": "水滴蟹", "el": "水", "job": "输出", "tags": ["浇水Lv2", "采矿Lv1"], "desc": "它最显眼的是那一对巨大的水滴钳子"},
-            {"id": "047", "name": "云翅龙", "el": "风", "job": "输出", "tags": ["浇水Lv2", "采矿Lv2"], "desc": "云翅龙快速扇动翅膀时，能搅动周围的气流"},
+            {"id": "047", "name": "云翅龙", "el": "无", "job": "输出", "tags": ["浇水Lv2", "采矿Lv2"], "desc": "云翅龙快速扇动翅膀时，能搅动周围的气流"},
             {"id": "048", "name": "石眉猪", "el": "土", "job": "坦克", "tags": ["搬运Lv2", "采矿Lv2"], "desc": "石眉猪力大如牛，速度敏捷"},
             {"id": "049", "name": "玄乌骓", "el": "无", "job": "坦克", "tags": ["搬运Lv3"], "desc": "玄马在黑夜中出生，奔跑起来像夜风一样轻盈"},
             {"id": "050", "name": "冰刃豹", "el": "冰", "job": "输出", "tags": ["制冷Lv2"], "desc": "在冰霜之地出没，拥有锋利的尾巴和爪子"},
