@@ -5,10 +5,11 @@ let layerGroups = {};
 let currentImageBase64 = "";
 
 const MARKER_TYPES = {
-    'orb': { label: '灵珠', icon: 'circle', class: 'icon-orb' },
-    'chest': { label: '宝箱', icon: 'box-open', class: 'icon-chest' },
-    'teleport': { label: '传送点', icon: 'dungeon', class: 'icon-teleport' },
-    'user': { label: '野外boss', icon: 'location-dot', class: 'icon-user' }
+    'orb': { label: '灵珠', img: 'assets/orb.png', class: 'icon-orb' },
+    'chest': { label: '宝箱', img: 'assets/chest.png', class: 'icon-chest' },
+    'teleport': { label: '传送点', img: 'assets/teleport.png', class: 'icon-teleport' },
+    'user': { label: '野外boss', img: 'assets/
+', class: 'icon-user' }
 };
 const initialMapData = [ {id: 'sys_t1', lat: 70, lng: 770, type: 'teleport', name: '初始之地', desc: '世界的中心'} ];
 const STORAGE_KEY = 'shanhai_full_v3';
@@ -22,18 +23,30 @@ function initMap() {
     // 确保容器存在
     if(!document.getElementById('map-container')) return;
 
-    map = L.map('map-container', { crs: L.CRS.Simple, minZoom: -2, zoomControl: false, attributionControl: false });
+    // 初始化地图对象
+    map = L.map('map-container', { 
+        crs: L.CRS.Simple, 
+        minZoom: -2, 
+        zoomControl: false, 
+        attributionControl: false 
+    });
+    
+    // 设置地图边界和图片
     const bounds = [[0,0], [1000,1000]];
-    
-    // ⚠️ 确保 assets 文件夹下有图片，或者修改路径
-    // 如果没有图片，背景会是蓝色，这是正常的
+    // ⚠️ 请确保 assets 文件夹下有 '山海大陆地图.png'
     L.imageOverlay('assets/山海大陆地图.png', bounds).addTo(map); 
-    map.fitBounds(bounds);
     
+    // ✅ 设置默认视图：中心点 [500, 500]，缩放等级 1 (放大效果)
+    map.setView([150, 680], 1); 
+
+    // 初始化图层组
     Object.keys(MARKER_TYPES).forEach(k => layerGroups[k] = L.layerGroup().addTo(map));
+    
+    // 渲染标记
     initialMapData.forEach(d => renderMarker(d)); 
     loadUserMarkers();
 
+    // 点击地图空白处添加标记
     map.on('click', (e) => openModal({lat: e.latlng.lat, lng: e.latlng.lng, id:'', name:'', type:'user', desc:'', img:''}));
 }
 
@@ -41,9 +54,9 @@ function renderMarker(data) {
     removeMarkerFromMap(data.id);
     const config = MARKER_TYPES[data.type] || MARKER_TYPES['user'];
     const icon = L.divIcon({
-        html: `<i class="fa-solid fa-${config.icon}"></i>`,
-        className: `icon-base ${config.class}`,
-        iconSize: [30, 30], iconAnchor: [15, 15]
+        html: `<img src="${config.img}" style="width:100%; height:100%; object-fit:contain;">`,        className: `icon-base ${config.class}`, // 保留 icon-base 用于做鼠标悬停变大特效
+        iconSize: [40, 40],   // 调整图标大小
+        iconAnchor: [20, 20]  // 锚点设为中心 (大小的一半)
     });
     const marker = L.marker([data.lat, data.lng], { icon: icon }).addTo(layerGroups[data.type]);
     marker.meta = data; 
@@ -141,4 +154,85 @@ function saveToStorage(data) {
 function loadUserMarkers() {
     let saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     saved.forEach(d => renderMarker(d));
+}
+// ================= 数据导入/导出逻辑 =================
+
+// 1. 导出数据
+function exportMapData() {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (!data || data === '[]') {
+        alert("当前没有标记数据可导出！");
+        return;
+    }
+
+    // 创建 Blob 对象
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    // 创建临时下载链接
+    const a = document.createElement('a');
+    a.href = url;
+    // 文件名包含当前时间，方便区分版本
+    const date = new Date().toISOString().slice(0, 10);
+    a.download = `山海寻灵_地图备份_${date}.json`;
+    
+    document.body.appendChild(a);
+    a.click();
+    
+    // 清理
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// 2. 触发导入（点击隐藏的 input）
+function triggerImport() {
+    document.getElementById('import-input').click();
+}
+
+// 3. 处理导入文件
+function importMapData(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const json = e.target.result;
+            const parsedData = JSON.parse(json);
+
+            // 简单的数据格式校验
+            if (!Array.isArray(parsedData)) {
+                throw new Error("格式错误：数据必须是数组");
+            }
+            if (parsedData.length > 0 && (!parsedData[0].id || !parsedData[0].lat)) {
+                throw new Error("格式错误：缺少必要的地图字段");
+            }
+
+            // 确认覆盖
+            if (!confirm(`读取到 ${parsedData.length} 条标记数据。\n导入将覆盖当前的本地记录，确定继续吗？`)) {
+                input.value = ''; // 清空 input 以便下次能选同一个文件
+                return;
+            }
+
+            // 保存并刷新
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedData));
+            
+            // 清除地图上现有的所有自定义标记
+            Object.values(layerGroups).forEach(group => group.clearLayers());
+            
+            // 重新加载标记
+            // 注意：因为 initialMapData 也会被渲染，所以这里我们只加载用户的
+            // 你的 loadUserMarkers 函数会读取 storage 并渲染
+            loadUserMarkers(); 
+            
+            alert("导入成功！");
+
+        } catch (err) {
+            alert("导入失败：" + err.message);
+            console.error(err);
+        }
+        // 清空 input，防止选中同一个文件不触发 change
+        input.value = '';
+    };
+    reader.readAsText(file);
 }
