@@ -119,11 +119,43 @@ const recipes = [
     { name: "传奇啾灵葫芦", type: "消耗", lv: 50, mat: "6星叶石, 8碳纤维" }
 ];
 
+// 新闻中心
 const newsData = [
-    { type: 'update', label: '更新', title: 'v2.1版本发布：新增"山海地图"功能', date: '11-28' },
-    { type: 'event', label: '活动', title: '找老邓寄存啾灵去正式服', date: '11-27' },
-    { type: 'news', label: '新闻', title: '关于"捣弹鱿"技能数值调整的公告', date: '11-25' },
-    { type: 'news', label: '新闻', title: '新手探险家入驻指南', date: '11-20' }
+{ 
+        type: 'update', 
+        label: '更新', 
+        title: 'v2.2版本预告：新啾灵即将登场', // 标题
+        date: '12-05', // 日期
+        url: 'news_v2.2.html' // ⚠️ 这一步最重要：指向你刚才创建的新HTML文件
+    },
+    { 
+        type: 'update', 
+        label: '更新', 
+        title: 'v2.1版本发布：新增"山海地图"与"点位标记"功能', 
+        date: '11-28',
+        url: 'news_v2.1.html' // 指向新的静态页面
+    },
+    { 
+        type: 'event', 
+        label: '活动', 
+        title: '找老邓寄存啾灵去正式服', 
+        date: '11-27',
+        url: '#' 
+    },
+    { 
+        type: 'news', 
+        label: '新闻', 
+        title: '关于"捣弹鱿"技能数值调整的公告', 
+        date: '11-25',
+        url: '#' 
+    },
+    { 
+        type: 'news', 
+        label: '新闻', 
+        title: '新手探险家入驻指南', 
+        date: '11-20',
+        url: '#' 
+    }
 ];
 
 const guideData = [

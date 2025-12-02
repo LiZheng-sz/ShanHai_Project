@@ -67,20 +67,23 @@ function switchView(viewId, btn) {
 // ================= 3. 首页逻辑 (Home) =================
 function renderHome() {
     // 渲染新闻列表
+if (typeof newsData !== 'undefined') {
     const newsBox = document.getElementById('news-container');
-    if(newsBox && typeof newsData !== 'undefined') {
-        let newsHtml = '';
-        newsData.forEach((n, index) => {
-            const color = n.type === 'update' ? '#d4af37' : (n.type === 'event' ? '#ff6b6b' : '#999');
-            newsHtml += `
-                <a href="#" class="news-item" style="display:flex; gap:10px; margin-bottom:10px; text-decoration:none; align-items:center;" data-hover>
-                    <span style="background:${color}; color:#fff; padding:2px 6px; border-radius:4px; font-size:11px; white-space:nowrap;">${n.label}</span>
-                    <span style="font-size:14px; color:#555; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${n.title}</span>
-                    <i class="fa-solid fa-angle-right" style="margin-left:auto; color:#ccc; font-size:12px;"></i>
-                </a>`;
-        });
-        newsBox.innerHTML = newsHtml;
-    }
+    newsBox.innerHTML = newsData.map(n => {
+        const color = n.type === 'update' ? '#d4af37' : (n.type === 'event' ? '#ff6b6b' : '#999');
+        // 检查是否有 URL，如果没有则为 #
+        const linkUrl = n.url ? n.url : 'javascript:void(0)';
+        const targetAttr = n.url && n.url !== '#' ? 'target="_blank"' : ''; // 建议新标签页打开
+
+        return `
+        <a href="${linkUrl}" ${targetAttr} class="news-item" data-hover style="text-decoration:none; display:flex; align-items:center; padding:10px; border-bottom:1px dashed #eee; transition:0.2s;">
+            <span style="background:${color}; color:#fff; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:10px;">${n.label}</span>
+            <span style="font-size:14px; color:#555; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${n.title}</span>
+            <span style="font-size:12px; color:#ccc; margin-left:10px;">${n.date}</span>
+            <i class="fa-solid fa-angle-right" style="margin-left:10px; color:#ddd; font-size:12px;"></i>
+        </a>`;
+    }).join('');
+}
 
     // 渲染攻略卡片
     const guideBox = document.getElementById('guide-container');
@@ -441,7 +444,266 @@ function initParticles() {
                 p.x = Math.random()*canvas.width; 
             }
         });
-        requestAnimationFrame(draw);
+        requestAnimationFrame(draw);// js/app.js - 优化重构版
+
+const app = {
+    // 1. 初始化
+    init: function() {
+        this.hideLoader();
+        this.renderHome();
+        this.initDex();
+        this.renderCraft();
+        this.initBreed();
+        this.initParticles();
+        this.initEffects();
+        
+        // 尝试初始化地图（如果 mapLogic 存在）
+        if(typeof mapLogic !== 'undefined' && mapLogic.init) {
+            mapLogic.init();
+        }
+    },
+
+    hideLoader: function() {
+        setTimeout(() => {
+            const gate = document.getElementById('intro-gate');
+            if (gate) {
+                gate.style.opacity = '0';
+                setTimeout(() => gate.style.display = 'none', 800);
+            }
+        }, 800);
+    },
+
+    // 2. 首页渲染
+    renderHome: function() {
+        if (typeof newsData !== 'undefined') {
+            const newsBox = document.getElementById('news-container');
+            newsBox.innerHTML = newsData.map(n => {
+                const color = n.type === 'update' ? '#d4af37' : (n.type === 'event' ? '#ff6b6b' : '#999');
+                return `<div class="news-item" data-hover>
+                    <span style="background:${color}; color:#fff; padding:2px 6px; border-radius:4px; font-size:11px;">${n.label}</span>
+                    <span style="font-size:14px; color:#555; flex:1; margin-left:10px;">${n.title}</span>
+                    <span style="font-size:12px; color:#ccc;">${n.date}</span>
+                </div>`;
+            }).join('');
+        }
+
+        if (typeof guideData !== 'undefined') {
+            const guideBox = document.getElementById('guide-container');
+            guideBox.innerHTML = guideData.map(g => `
+                <div class="guide-card" data-hover>
+                    <div style="font-size:24px; color:var(--accent); min-width:40px; text-align:center;">
+                        <i class="fa-solid fa-${g.icon || 'star'}"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin:0 0 5px 0; color:var(--primary);">${g.title}</h4>
+                        <p style="margin:0; font-size:12px; color:#888;">${g.desc}</p>
+                    </div>
+                </div>`).join('');
+        }
+
+        if (typeof spirits !== 'undefined') {
+            document.getElementById('stat-count').innerText = spirits.length;
+        }
+    },
+
+    // 3. 图鉴逻辑
+    initDex: function() {
+        this.renderDexList(typeof spirits !== 'undefined' ? spirits : []);
+    },
+
+    renderDexList: function(data) {
+        const listContainer = document.getElementById('dex-list');
+        if (!listContainer) return;
+        listContainer.innerHTML = '';
+
+        data.forEach((mon, idx) => {
+            const item = document.createElement('div');
+            item.className = 'dex-item';
+            // 生成一个基于属性的随机色块作为头像
+            const colorBlock = this.getPlaceholderColor(mon.el);
+            
+            item.innerHTML = `
+                <div class="dex-item-img" style="background:${colorBlock}; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px;">
+                    ${mon.el ? mon.el[0] : '无'}
+                </div>
+                <div class="dex-item-info">
+                    <div>
+                        <div style="font-size:10px; color:#999;">NO.${mon.id}</div>
+                        <div class="dex-item-name">${mon.name}</div>
+                    </div>
+                </div>`;
+            
+            item.onclick = () => this.selectDexItem(mon, item);
+            listContainer.appendChild(item);
+            
+            // 桌面端默认选中第一个
+            if(idx === 0 && window.innerWidth > 768) this.selectDexItem(mon, item, false);
+        });
+    },
+
+    selectDexItem: function(mon, domElement, animate = true) {
+        document.querySelectorAll('.dex-item').forEach(el => el.classList.remove('active'));
+        if (domElement) domElement.classList.add('active');
+
+        // 填充数据
+        document.getElementById('detail-id').innerText = mon.id;
+        document.getElementById('detail-name').innerText = mon.name;
+        document.getElementById('detail-desc').innerText = mon.desc || "暂无描述";
+        document.getElementById('detail-element').innerHTML = this.getElementIcon(mon.el);
+        document.getElementById('detail-role').innerText = mon.job || "未知";
+        document.getElementById('detail-content').style.display = 'grid';
+        document.querySelector('.empty-state').style.display = 'none';
+
+        // 设置大图 (这里使用本地占位逻辑，避免外网请求)
+        const bigImg = document.getElementById('detail-img');
+        // 尝试加载本地图片，如果不存在则使用 assets/none.png
+        // 实际开发中你可以用 assets/spirits/${mon.id}.png
+        bigImg.src = `assets/none.png`; 
+
+        // 渲染工作适应性
+        const workContainer = document.getElementById('detail-work');
+        workContainer.innerHTML = (mon.tags || []).map(t => 
+            `<div class="work-item">${t}</div>`
+        ).join('') || '<div class="work-item" style="color:#999">无</div>';
+
+        // 手机端滑入效果
+        if (animate && window.innerWidth <= 768) {
+            document.querySelector('.dex-layout-container').classList.add('show-detail');
+        }
+    },
+
+    backToDexList: function() {
+        document.querySelector('.dex-layout-container').classList.remove('show-detail');
+    },
+
+    filterDex: function() {
+        const search = document.getElementById('dexSearch').value.toLowerCase();
+        const filter = document.getElementById('dexFilter').value;
+        const filtered = spirits.filter(s => {
+            const matchName = s.name.toLowerCase().includes(search);
+            const matchType = filter === 'all' || s.el.includes(filter);
+            return matchName && matchType;
+        });
+        this.renderDexList(filtered);
+    },
+
+    // 4. 配方逻辑
+    renderCraft: function() {
+        const container = document.getElementById('recipe-list');
+        const search = document.getElementById('craftSearch').value.toLowerCase();
+        if(!container) return;
+        
+        container.innerHTML = '';
+        recipes.forEach((r, i) => {
+            if (search && !JSON.stringify(r).toLowerCase().includes(search)) return;
+            const div = document.createElement('div');
+            div.className = 'recipe-card';
+            div.style.animationDelay = `${i * 0.05}s`;
+            div.innerHTML = `
+                <div style="font-size:24px; color:var(--accent); margin-right:15px;"><i class="fa-solid fa-scroll"></i></div>
+                <div style="flex:1;">
+                    <div style="font-weight:bold;">${r.name}</div>
+                    <div style="font-size:12px; color:#888;">${r.type} | Lv.${r.lv}</div>
+                </div>
+                <div style="font-size:12px; color:#666; background:#f4f4f4; padding:5px 10px; border-radius:6px;">${r.mat}</div>
+            `;
+            container.appendChild(div);
+        });
+    },
+
+    // 5. 融合逻辑
+    initBreed: function() {
+        const fill = (id) => {
+            const el = document.getElementById(id);
+            if(el) el.innerHTML = '<option>请选择</option>' + spirits.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        };
+        fill('p1'); fill('p2');
+    },
+
+    checkBreed: function() {
+        const p1 = document.getElementById('p1').value;
+        const p2 = document.getElementById('p2').value;
+        if(p1 !== '请选择' && p2 !== '请选择') {
+            document.getElementById('result-name').innerText = "推演中...";
+            document.getElementById('result-egg').classList.add('active');
+            setTimeout(() => {
+                document.getElementById('result-name').innerText = "神秘灵兽";
+                document.getElementById('result-egg').classList.remove('active');
+            }, 1000);
+        }
+    },
+
+    // 工具函数
+    getElementIcon: function(type) {
+        if (!type) return '';
+        if (typeof ELEMENT_ICONS !== 'undefined') {
+            for (let k in ELEMENT_ICONS) {
+                if (type.includes(k)) return ELEMENT_ICONS[k];
+            }
+        }
+        return '<i class="fa-solid fa-circle" style="color:#ccc"></i>';
+    },
+
+    getPlaceholderColor: function(type) {
+        const colors = {
+            '火': '#ff6b6b', '水': '#4dabf7', '木': '#69db7c', 
+            '金': '#ffd43b', '土': '#b197fc', '冰': '#66d9e8', '无': '#ced4da'
+        };
+        for(let k in colors) if(type && type.includes(k)) return colors[k];
+        return '#adb5bd';
+    },
+
+    initParticles: function() {
+        const canvas = document.getElementById('particle-canvas');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const p = Array.from({length: 40}, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: Math.random() * 2,
+            s: Math.random() * 0.5 + 0.1
+        }));
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "rgba(212, 175, 55, 0.3)";
+            p.forEach(pt => {
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
+                ctx.fill();
+                pt.y -= pt.s;
+                if(pt.y < 0) pt.y = canvas.height;
+            });
+            requestAnimationFrame(draw);
+        }
+        draw();
+    },
+
+    initEffects: function() {
+        // 简单的鼠标悬停效果
+        const targets = document.querySelectorAll('[data-hover], button, a');
+        targets.forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+        });
+        
+        // 鼠标跟随
+        const dot = document.getElementById('cursor-dot');
+        const outline = document.getElementById('cursor-outline');
+        if(dot && window.innerWidth > 768) {
+            window.addEventListener('mousemove', e => {
+                dot.style.left = e.clientX + 'px';
+                dot.style.top = e.clientY + 'px';
+                outline.animate({left: e.clientX + 'px', top: e.clientY + 'px'}, {duration: 500, fill: "forwards"});
+            });
+        }
+    }
+};
+
+window.onload = () => app.init();
     }
     draw();
 }

@@ -8,8 +8,7 @@ const MARKER_TYPES = {
     'orb': { label: '灵珠', img: 'assets/orb.png', class: 'icon-orb' },
     'chest': { label: '宝箱', img: 'assets/chest.png', class: 'icon-chest' },
     'teleport': { label: '传送点', img: 'assets/teleport.png', class: 'icon-teleport' },
-    'user': { label: '野外boss', img: 'assets/
-', class: 'icon-user' }
+    'user': { label: '野外boss', img: 'assets/user.png', class: 'icon-user' }
 };
 const initialMapData = [ {id: 'sys_t1', lat: 70, lng: 770, type: 'teleport', name: '初始之地', desc: '世界的中心'} ];
 const STORAGE_KEY = 'shanhai_full_v3';
