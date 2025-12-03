@@ -85,6 +85,18 @@ function toggleLayer(type, btn) {
         else { map.addLayer(layerGroups[type]); btn.classList.add('active'); btn.style.opacity = '1'; }
 }
 
+// ================= 手机端菜单逻辑 =================
+
+function toggleMapControls() {
+    const panel = document.getElementById('map-controls');
+    // 切换 open 类名来控制显示/隐藏
+    if (panel.classList.contains('open')) {
+        panel.classList.remove('open');
+    } else {
+        panel.classList.add('open');
+    }
+}
+
 function openModal(data) {
     document.getElementById('marker-id').value = data.id;
     document.getElementById('marker-lat').value = data.lat;

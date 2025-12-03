@@ -38,13 +38,6 @@ const recipes = [
 
 // 新闻中心
 const newsData = [
-{ 
-        type: 'update', 
-        label: '更新', 
-        title: 'v2.2版本预告：新啾灵即将登场', // 标题
-        date: '12-05', // 日期
-        url: 'news_v2.2.html' // ⚠️ 这一步最重要：指向你刚才创建的新HTML文件
-    },
     { 
         type: 'update', 
         label: '更新', 
@@ -62,14 +55,14 @@ const newsData = [
     { 
         type: 'news', 
         label: '新闻', 
-        title: '关于"捣弹鱿"技能数值调整的公告', 
+        title: '新模式，天空竞技场', 
         date: '11-25',
         url: '#' 
     },
     { 
         type: 'news', 
         label: '新闻', 
-        title: '新手探险家入驻指南', 
+        title: '前期开荒注意指南', 
         date: '11-20',
         url: '#' 
     }
