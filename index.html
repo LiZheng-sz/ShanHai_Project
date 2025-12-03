@@ -50,7 +50,7 @@
                     <div class="hero-overlay"></div>
                     <div class="hero-content">
                         <h1 style="margin:0 0 10px 0; font-size:32px; color:var(--accent);">欢迎回到山海大陆</h1>
-                        <p style="margin:0; opacity:0.9; font-size:16px;">捕捉啾灵，记录奇迹 | 当前版本 v3.3</p>
+                        <p style="margin:0; opacity:0.9; font-size:16px;">捕捉啾灵，记录奇迹 | 当前版本 v3.4</p>
                     </div>
                     <div class="hero-icon" style="font-size:100px; color:rgba(255,255,255,0.3); transform: rotate(-15deg); z-index: 2;">
                         <i class="fa-solid fa-scroll"></i>
@@ -144,14 +144,14 @@
                                     <div class="work-icons" id="detail-work"></div>
                                 </div>
                                 <div class="info-section">
-                                    <label>掉落物:</label>
+                                    <label>立正锐评:</label>
                                     <div class="drop-items" id="detail-drops"></div>
                                 </div>
                             </div>
 
                             <div class="desc-footer">
                                 <div class="catch-rate">
-                                    <span class="label">捕获进度:</span>
+                                    <span class="label">稀有度:</span>
                                     <div class="pokeballs">
                                         <i class="fa-regular fa-circle-check" style="color:#aaa;"></i>
                                         <i class="fa-regular fa-circle-check" style="color:#aaa;"></i>
@@ -168,12 +168,59 @@
             </div>
         </div>
 
-        <div id="craft" class="view-section">
-             <div class="search-container">
-                <input type="text" class="glass-input" id="craftSearch" placeholder="搜索配方 (如: 鞍具, 铁锭)..." oninput="renderCraft()">
+<div id="craft" class="view-section">
+    <div class="craft-layout">
+        <div class="craft-sidebar">
+            <div class="search-container" style="margin: 0 0 20px 0; position:relative; top:0;">
+                <input type="text" class="glass-input" id="craftSearch" placeholder="搜索配方 (如: 鞍具, 碳纤维)..." oninput="app.filterCraft()">
             </div>
-            <div id="recipe-list" class="recipe-list"></div>
+            <div id="recipe-list" class="craft-list-container"></div>
         </div>
+
+        <div class="craft-main">
+            <div id="blueprint-panel" class="blueprint-card">
+                <div class="empty-state-craft">
+                    <i class="fa-solid fa-compass-drafting" style="font-size: 48px; margin-bottom: 20px; color:#ddd;"></i>
+                    <p>选择左侧配方进行解析</p>
+                </div>
+                
+                <div id="craft-detail-content" style="display:none;">
+                    <div class="blueprint-header">
+                        <h2 id="bp-name">物品名称</h2>
+                        <div class="bp-meta">
+                            <span id="bp-type" class="bp-tag">类型</span>
+                            <span id="bp-yield" class="bp-tag warning">产量: 1</span>
+                        </div>
+                    </div>
+
+                    <div class="calc-control">
+                        <label>制作数量:</label>
+                        <div class="stepper">
+                            <button onclick="app.updateCraftCalc(-1)">-</button>
+                            <input type="number" id="calc-qty" value="1" min="1" onchange="app.calcCraftMaterials()">
+                            <button onclick="app.updateCraftCalc(1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="blueprint-body">
+                        <div class="bp-tabs">
+                            <div class="bp-tab active" onclick="app.switchBpTab('raw')" id="tab-raw">基础材料统计</div>
+                            <div class="bp-tab" onclick="app.switchBpTab('tree')" id="tab-tree">合成树状图</div>
+                        </div>
+
+                        <div id="view-raw" class="bp-view active">
+                            <div id="raw-mat-list" class="mat-grid"></div>
+                        </div>
+
+                        <div id="view-tree" class="bp-view">
+                            <div id="tree-container" class="tree-wrapper"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
         <div id="map" class="view-section">
             <div id="map-container" class="map-wrapper" style="width: 100%; height: 100%;"></div>
@@ -245,16 +292,16 @@
             </div>
             
             <div class="modal-body" style="padding:25px; overflow-y:auto; max-height: 60vh;">
-                <div class="upload-area" onclick="document.getElementById('marker-img-input').click()" data-hover>
-                    <i class="fa-solid fa-cloud-arrow-up upload-icon" style="font-size:30px; color:#ccc; margin-bottom:10px;"></i>
-                    <div class="upload-text" style="color:#999; font-size:13px;">点击上传现场图片</div>
-                    <img id="marker-img-preview" class="upload-preview" alt="Preview">
-                    <input type="file" id="marker-img-input" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
-                </div>
+
 
                 <div class="form-group">
                     <label style="display:block; font-size:12px; color:#888; margin-bottom:5px;">标记名称</label>
                     <input type="text" id="marker-name" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label style="display:block; font-size:12px; color:#888; margin-bottom:5px;">备注信息</label>
+                    <textarea id="marker-desc" class="form-textarea" style="height:60px; resize:none;"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -266,12 +313,14 @@
                         <option value="teleport">⛩️ 传送点</option>
                     </select>
                 </div>
-
-                <div class="form-group">
-                    <label style="display:block; font-size:12px; color:#888; margin-bottom:5px;">备注信息</label>
-                    <textarea id="marker-desc" class="form-textarea" style="height:60px; resize:none;"></textarea>
-                </div>
                 
+                <div class="upload-area" onclick="document.getElementById('marker-img-input').click()" data-hover>
+                    <i class="fa-solid fa-cloud-arrow-up upload-icon" style="font-size:30px; color:#ccc; margin-bottom:10px;"></i>
+                    <div class="upload-text" style="color:#999; font-size:13px;">点击上传现场图片</div>
+                    <img id="marker-img-preview" class="upload-preview" alt="Preview">
+                    <input type="file" id="marker-img-input" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
+                </div>
+
                 <input type="hidden" id="marker-lat">
                 <input type="hidden" id="marker-lng">
                 <input type="hidden" id="marker-id">
@@ -283,6 +332,11 @@
             </div>
         </div>
     </div>
+
+<!--版权申明 -->
+<footer style="text-align: center; padding: 20px; color: #666; font-size: 12px;">
+    © 2024 山海寻灵. 版权所有. 未经授权禁止复制、转载或建立镜像.
+</footer>
 
     <script src="https://cdn.bootcdn.net/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script src="js/data.js"></script>

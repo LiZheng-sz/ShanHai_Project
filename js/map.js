@@ -2,7 +2,11 @@
 
 let map;
 let layerGroups = {};
+let labelLayerGroup; // 文字标签图层组
 let currentImageBase64 = "";
+
+// 新增：缩放阈值常量
+const ZOOM_THRESHOLD = 0; // 当地图缩放级别小于等于这个值时显示文字标签
 
 const MARKER_TYPES = {
     'orb': { label: '灵珠', img: 'assets/orb.png', class: 'icon-orb' },
@@ -10,7 +14,42 @@ const MARKER_TYPES = {
     'teleport': { label: '传送点', img: 'assets/teleport.png', class: 'icon-teleport' },
     'user': { label: '野外boss', img: 'assets/user.png', class: 'icon-user' }
 };
-const initialMapData = [ {id: 'sys_t1', lat: 70, lng: 770, type: 'teleport', name: '初始之地', desc: '世界的中心'} ];
+
+const initialMapData = [
+    // ============ 传送点 ============
+    {id: 'sys_t1', lat: 70, lng: 770, type: 'teleport', name: '三绝试炼', desc: '初始之地', img: ''},
+    {id: 'sys_t2', lat: 145.5, lng: 599.5, type: 'teleport', name: '第一封印塔', desc: '', img: ''},
+    {id: 'sys_t3', lat: 543.5, lng: 376.5, type: 'teleport', name: '第二封印塔', desc: '', img: ''},
+    {id: 'sys_t4', lat: 680.5, lng: 589, type: 'teleport', name: '第三封印塔', desc: '', img: ''},
+    {id: 'sys_t5', lat: 764, lng: 849, type: 'teleport', name: '第四封印塔', desc: '', img: ''},
+    {id: 'sys_t6', lat: 138, lng: 714, type: 'teleport', name: '巨兽领地', desc: '', img: ''},
+    {id: 'sys_t7', lat: 177.5, lng: 667, type: 'teleport', name: '金袖君外', desc: '', img: ''},
+    {id: 'sys_t8', lat: 173, lng: 755, type: 'teleport', name: '未命名', desc: '', img: ''},
+    {id: 'sys_t9', lat: 95.5, lng: 773.5, type: 'teleport', name: '新手村', desc: '', img: ''},
+
+    // ============ 灵珠 ============
+    {id: 'sys_orb1', lat: 251.5, lng: 716, type: 'orb', name: '山道2', desc: '', img: ''},
+
+    // ============ 宝箱 ============
+    {id: 'sys_chest1', lat: 98, lng: 744.5, type: 'chest', name: '草地', desc: '', img: ''},
+
+    // ============ 野外BOSS ============
+    {id: 'sys_boss1', lat: 169.5, lng: 718.5, type: 'user', name: '草猿山', desc: '', img: ''},
+    {id: 'sys_boss2', lat: 179.5, lng: 632.5, type: 'user', name: '金袖君', desc: '', img: ''},
+    {id: 'sys_boss3', lat: 231.5, lng: 743, type: 'user', name: '锦鹰卫', desc: '', img: ''}
+];
+
+// 文字标签数据
+const mapLabels = [
+    {id: 'sys_label1', lat: 190, lng:670, text: '号角之丘', fontSize: 24, color: '#8B4513', fontWeight: 'bold'},
+    {id: 'sys_label2', lat: 370, lng: 560, text: '月升岛', fontSize: 23, color: '#44b4da', fontWeight: 'bold'},
+    {id: 'sys_label3', lat: 460, lng: 370, text: '遗秋岛', fontSize: 26, color: '#375480', fontWeight: 'bold'},
+    {id: 'sys_label4', lat: 610, lng: 570, text: '鲤越泽', fontSize: 30, color: '#fabc82', fontWeight: 'bold'},
+    {id: 'sys_label5', lat: 760, lng: 700, text: '银龙雪山', fontSize: 32, color: '#375480', fontWeight: 'bold'},
+    {id: 'sys_label6', lat: 500, lng: 100, text: '溪舟屿',fontSize: 22, color: '#ff69b4', fontWeight: 'bold'},
+    // 其他文字标签示例（根据需要取消注释）
+];
+
 const STORAGE_KEY = 'shanhai_full_v3';
 
 // 模态框元素引用
@@ -25,7 +64,8 @@ function initMap() {
     // 初始化地图对象
     map = L.map('map-container', { 
         crs: L.CRS.Simple, 
-        minZoom: -2, 
+        minZoom: -0.5, 
+        maxZoom: 2,
         zoomControl: false, 
         attributionControl: false 
     });
@@ -35,25 +75,92 @@ function initMap() {
     // ⚠️ 请确保 assets 文件夹下有 '山海大陆地图.png'
     L.imageOverlay('assets/山海大陆地图.png', bounds).addTo(map); 
     
-    // ✅ 设置默认视图：中心点 [500, 500]，缩放等级 1 (放大效果)
+    // ✅ 设置默认视图：中心点 [150, 680]，缩放等级 1 (放大效果)
     map.setView([150, 680], 1); 
 
     // 初始化图层组
     Object.keys(MARKER_TYPES).forEach(k => layerGroups[k] = L.layerGroup().addTo(map));
     
+    // 新增：初始化文字标签图层组
+    labelLayerGroup = L.layerGroup().addTo(map);
+    
     // 渲染标记
     initialMapData.forEach(d => renderMarker(d)); 
     loadUserMarkers();
+    
+    // 新增：监听缩放事件
+    map.on('zoomend', handleZoomChange);
+    
+    // 新增：初始渲染文字标签
+    renderMapLabels();
+    
+    // 初始切换图层显示
+    handleZoomChange();
 
     // 点击地图空白处添加标记
     map.on('click', (e) => openModal({lat: e.latlng.lat, lng: e.latlng.lng, id:'', name:'', type:'user', desc:'', img:''}));
+}
+
+// 新增：处理缩放变化的函数
+function handleZoomChange() {
+    const currentZoom = map.getZoom();
+    
+    if (currentZoom <= ZOOM_THRESHOLD) {
+        // 显示文字标签，隐藏图标标记
+        Object.values(layerGroups).forEach(group => map.removeLayer(group));
+        if (!map.hasLayer(labelLayerGroup)) {
+            map.addLayer(labelLayerGroup);
+        }
+    } else {
+        // 显示图标标记，隐藏文字标签
+        Object.values(layerGroups).forEach(group => {
+            if (!map.hasLayer(group)) {
+                map.addLayer(group);
+            }
+        });
+        if (map.hasLayer(labelLayerGroup)) {
+            map.removeLayer(labelLayerGroup);
+        }
+    }
+}
+
+// 新增：渲染文字标签函数
+function renderMapLabels() {
+    // 清空现有标签
+    labelLayerGroup.clearLayers();
+    
+    // 遍历所有标签数据并创建文字标签
+    mapLabels.forEach(label => {
+        // 创建自定义的div图标作为文字标签
+        const icon = L.divIcon({
+            html: `<div style="
+                color: ${label.color || '#000000'}; 
+                font-size: ${label.fontSize || 12}px; 
+                font-weight: ${label.fontWeight || 'normal'}; 
+                text-shadow: 1px 1px 2px rgba(255,255,255,0.8), -1px -1px 2px rgba(255,255,255,0.8);
+                white-space: nowrap;
+                pointer-events: none;
+                user-select: none;
+            ">${label.text}</div>`,
+            className: 'map-label',
+            iconSize: null, // 让divIcon根据内容自动调整大小
+            iconAnchor: [0, 0]
+        });
+        
+        // 创建标记（但只显示文字）
+        const marker = L.marker([label.lat, label.lng], {
+            icon: icon,
+            interactive: false // 设置不可交互，避免阻挡地图点击
+        }).addTo(labelLayerGroup);
+    });
 }
 
 function renderMarker(data) {
     removeMarkerFromMap(data.id);
     const config = MARKER_TYPES[data.type] || MARKER_TYPES['user'];
     const icon = L.divIcon({
-        html: `<img src="${config.img}" style="width:100%; height:100%; object-fit:contain;">`,        className: `icon-base ${config.class}`, // 保留 icon-base 用于做鼠标悬停变大特效
+        html: `<img src="${config.img}" style="width:100%; height:100%; object-fit:contain;">`,
+        className: `icon-base ${config.class}`, // 保留 icon-base 用于做鼠标悬停变大特效
         iconSize: [40, 40],   // 调整图标大小
         iconAnchor: [20, 20]  // 锚点设为中心 (大小的一半)
     });
@@ -81,8 +188,15 @@ function removeMarkerFromMap(id) {
 }
 
 function toggleLayer(type, btn) {
-        if (map.hasLayer(layerGroups[type])) { map.removeLayer(layerGroups[type]); btn.classList.remove('active'); btn.style.opacity = '0.5'; } 
-        else { map.addLayer(layerGroups[type]); btn.classList.add('active'); btn.style.opacity = '1'; }
+    if (map.hasLayer(layerGroups[type])) { 
+        map.removeLayer(layerGroups[type]); 
+        btn.classList.remove('active'); 
+        btn.style.opacity = '0.5'; 
+    } else { 
+        map.addLayer(layerGroups[type]); 
+        btn.classList.add('active'); 
+        btn.style.opacity = '1'; 
+    }
 }
 
 // ================= 手机端菜单逻辑 =================
@@ -106,14 +220,20 @@ function openModal(data) {
     document.getElementById('marker-desc').value = data.desc || '';
     currentImageBase64 = data.img || '';
     
-    if (currentImageBase64) { imgPreview.src = currentImageBase64; imgPreview.style.display = 'block'; } 
-    else { imgPreview.style.display = 'none'; }
+    if (currentImageBase64) { 
+        imgPreview.src = currentImageBase64; 
+        imgPreview.style.display = 'block'; 
+    } else { 
+        imgPreview.style.display = 'none'; 
+    }
     imgInput.value = ''; 
     document.getElementById('btn-delete').style.display = data.id ? 'block' : 'none';
     modalOverlay.classList.add('open');
 }
 
-function closeModal() { modalOverlay.classList.remove('open'); }
+function closeModal() { 
+    modalOverlay.classList.remove('open'); 
+}
 
 function handleImageUpload(input) {
     if (input.files && input.files[0]) {
@@ -159,13 +279,18 @@ function saveToStorage(data) {
     let saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const idx = saved.findIndex(m => m.id === data.id);
     if (idx > -1) saved[idx] = data; else saved.push(data);
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(saved)); } catch (e) { alert("存储空间已满"); }
+    try { 
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saved)); 
+    } catch (e) { 
+        alert("存储空间已满"); 
+    }
 }
 
 function loadUserMarkers() {
     let saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     saved.forEach(d => renderMarker(d));
 }
+
 // ================= 数据导入/导出逻辑 =================
 
 // 1. 导出数据

@@ -81,8 +81,7 @@ const app = {
             const item = document.createElement('div');
             item.className = 'dex-item';
             
-            // 修复：图片路径统一假设在 assets/spirits/ 文件夹下
-            // 如果你的图片在根目录，请改为 src="${mon.id}.png"
+            // 修复：图片路径统一设在 assets/spirits/ 文件夹下
             const iconHtml = `<img src="assets/spirits/${mon.id}.png" class="dex-item-img" 
                                    alt="${mon.name}" 
                                    style="object-fit: contain; background: #fff;" 
@@ -160,30 +159,6 @@ const app = {
         this.renderDexList(filtered);
     },
 
-    // 4. 配方逻辑
-    renderCraft: function() {
-        const container = document.getElementById('recipe-list');
-        const searchInput = document.getElementById('craftSearch');
-        if(!container || typeof recipes === 'undefined') return;
-        
-        const search = searchInput ? searchInput.value.toLowerCase() : "";
-        container.innerHTML = '';
-        recipes.forEach((r, i) => {
-            if (search && !JSON.stringify(r).toLowerCase().includes(search)) return;
-            const div = document.createElement('div');
-            div.className = 'recipe-card';
-            div.style.animationDelay = `${i * 0.05}s`;
-            div.innerHTML = `
-                <div style="font-size:24px; color:var(--accent); margin-right:15px;"><i class="fa-solid fa-scroll"></i></div>
-                <div style="flex:1;">
-                    <div style="font-weight:bold;">${r.name}</div>
-                    <div style="font-size:12px; color:#888;">${r.type} | Lv.${r.lv}</div>
-                </div>
-                <div style="font-size:12px; color:#666; background:#f4f4f4; padding:5px 10px; border-radius:6px;">${r.mat}</div>
-            `;
-            container.appendChild(div);
-        });
-    },
 
     // 5. 融合逻辑
     initBreed: function() {
@@ -312,5 +287,180 @@ const app = {
         }
     }
 };
+
+
+
+// ---------------- 天工造物模块 ----------------
+
+let currentCraftItem = null;
+
+app.renderCraft = function() {
+    this.filterCraft(); // 初始化显示列表
+};
+
+// 1. 列表渲染与过滤
+app.filterCraft = function() {
+    const search = document.getElementById('craftSearch').value.toLowerCase();
+    const container = document.getElementById('recipe-list');
+    if(!container || typeof RECIPE_DB === 'undefined') return;
+
+    container.innerHTML = '';
+    
+    // 将 Object 转换为 Array 并排序
+    const list = Object.keys(RECIPE_DB).map(key => ({name: key, ...RECIPE_DB[key]}));
+    
+    list.forEach(item => {
+        if(search && !item.name.toLowerCase().includes(search) && !item.type.includes(search)) return;
+
+        const div = document.createElement('div');
+        div.className = 'craft-item';
+        div.onclick = () => app.selectCraftItem(item.name);
+        div.innerHTML = `
+            <div>
+                <div style="font-weight:bold; color:var(--primary)">${item.name}</div>
+                <div style="font-size:12px; color:#888;">${item.type} ${item.lv ? '| Lv.'+item.lv : ''}</div>
+            </div>
+            <i class="fa-solid fa-chevron-right" style="color:#ccc; font-size:12px;"></i>
+        `;
+        container.appendChild(div);
+    });
+};
+
+// 2. 选中物品
+app.selectCraftItem = function(name) {
+    currentCraftItem = name;
+    document.querySelector('.empty-state-craft').style.display = 'none';
+    document.getElementById('craft-detail-content').style.display = 'block';
+    
+    // 高亮列表项
+    document.querySelectorAll('.craft-item').forEach(el => {
+        el.classList.toggle('active', el.innerText.includes(name));
+    });
+
+    const data = RECIPE_DB[name];
+    document.getElementById('bp-name').innerText = name;
+    document.getElementById('bp-type').innerText = data.type;
+    
+    const yieldEl = document.getElementById('bp-yield');
+    if(data.yield > 1) {
+        yieldEl.style.display = 'inline-block';
+        yieldEl.innerText = `产量: 每份 ${data.yield} 个`;
+    } else {
+        yieldEl.style.display = 'none';
+    }
+
+    // 重置数量为1并计算
+    document.getElementById('calc-qty').value = 1;
+    this.calcCraftMaterials();
+};
+
+// 3. 数量变更辅助
+app.updateCraftCalc = function(delta) {
+    const input = document.getElementById('calc-qty');
+    let val = parseInt(input.value) + delta;
+    if(val < 1) val = 1;
+    input.value = val;
+    this.calcCraftMaterials();
+};
+
+// 4. 核心计算逻辑 (递归)
+app.calcCraftMaterials = function() {
+    if(!currentCraftItem) return;
+    const qty = parseInt(document.getElementById('calc-qty').value);
+    
+    // A. 计算基础材料汇总
+    const rawTotals = {};
+    this.recursiveGetRaw(currentCraftItem, qty, rawTotals);
+    
+    // 渲染原材料网格
+    const rawContainer = document.getElementById('raw-mat-list');
+    rawContainer.innerHTML = Object.entries(rawTotals).map(([name, count]) => `
+        <div class="mat-card">
+            <div class="mat-icon"><i class="fa-solid fa-cube"></i></div>
+            <div class="mat-qty">${Math.ceil(count)}</div> <div class="mat-name">${name}</div>
+        </div>
+    `).join('');
+
+    // B. 渲染树状图
+    const treeContainer = document.getElementById('tree-container');
+    treeContainer.innerHTML = this.renderTreeHTML(currentCraftItem, qty);
+};
+
+// 递归函数：计算基础材料
+app.recursiveGetRaw = function(itemName, needQty, accumulator) {
+    // 如果是基础材料，直接累加
+    if(BASIC_MATS.has(itemName) || !RECIPE_DB[itemName]) {
+        accumulator[itemName] = (accumulator[itemName] || 0) + needQty;
+        return;
+    }
+
+    const recipe = RECIPE_DB[itemName];
+    // 计算需要制作的次数。比如需要8个布，每次产5个，则需要制作 Math.ceil(8/5) = 2次
+    // 注意：这里为了计算准确的“原材料消耗”，我们通常假设可以拆分，或者严格按照制作次数。
+    // 为了给玩家准确的“准备材料”建议，我们按“制作次数 * 单次消耗”来算比较保险，
+    // 但为了展示比例，这里使用精确除法，最后显示时向上取整。
+    
+    const craftTimes = needQty / recipe.yield; 
+
+    for(let [matName, matQty] of Object.entries(recipe.mat)) {
+        this.recursiveGetRaw(matName, matQty * craftTimes, accumulator);
+    }
+};
+
+// 递归函数：生成树状 HTML
+app.renderTreeHTML = function(itemName, needQty, depth = 0) {
+    const isBasic = BASIC_MATS.has(itemName) || !RECIPE_DB[itemName];
+    const qtyDisplay = Number(needQty).toFixed(1).replace(/\.0$/, ''); // 去掉多余小数
+    
+    let html = `
+        <div class="tree-node">
+            <div class="node-content ${isBasic ? 'basic' : 'inter'}">
+                <span style="font-weight:bold; margin-right:5px;">${qtyDisplay}</span> 
+                ${itemName}
+            </div>
+    `;
+
+    if(!isBasic) {
+        const recipe = RECIPE_DB[itemName];
+        // 计算下一级需要的数量
+        const craftTimes = needQty / recipe.yield;
+        
+        for(let [matName, matQty] of Object.entries(recipe.mat)) {
+            html += app.renderTreeHTML(matName, matQty * craftTimes, depth + 1);
+        }
+    }
+
+    html += `</div>`;
+    return html;
+};
+
+// 5. 切换 Tab
+app.switchBpTab = function(tabName) {
+    document.querySelectorAll('.bp-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.bp-view').forEach(v => v.classList.remove('active'));
+    
+    document.getElementById('tab-' + tabName).classList.add('active');
+    document.getElementById('view-' + tabName).classList.add('active');
+};
+
+// 防盗措施//
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+});
+
+document.addEventListener('selectstart', function(e) {
+    e.preventDefault();
+});
+
+// 禁用F12和开发者工具
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'F12' || 
+        (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+        (e.ctrlKey && e.shiftKey && e.key === 'J') || 
+        (e.ctrlKey && e.key === 'U')) {
+        e.preventDefault();
+        alert('操作已被禁止');
+    }
+});
 
 window.onload = () => app.init();

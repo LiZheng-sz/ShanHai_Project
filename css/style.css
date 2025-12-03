@@ -26,6 +26,7 @@ body, html {
     overflow: hidden; 
 }
 
+
 /* 宣纸纹理层 */
 .paper-texture {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -403,7 +404,91 @@ body.hovering #cursor-dot { opacity: 0; }
         border-bottom: 1px solid rgba(0,0,0,0.05); background: var(--bg-paper);
         position: sticky; top: 0; z-index: 50;
     }
-    .dex-tabs { display: none; }
+    .dex-tabs { display: none; 
+}
+
+/* --- 工坊新布局 --- */
+.craft-layout {
+    display: flex; gap: 30px; height: calc(100vh - 150px); max-width: 1400px; margin: 0 auto;
+}
+.craft-sidebar { flex: 1; display: flex; flex-direction: column; max-width: 350px; }
+.craft-list-container { overflow-y: auto; padding-right: 5px; flex: 1; }
+
+.craft-main { flex: 2; position: relative; }
+.blueprint-card {
+    background: #fff; border-radius: 20px; height: 100%;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+    padding: 30px; overflow-y: auto;
+    background-image: radial-gradient(#d4af37 1px, transparent 1px);
+    background-size: 20px 20px; /* 蓝图网格效果 */
+}
+
+/* 列表项 */
+.craft-item {
+    background: rgba(255,255,255,0.6); margin-bottom: 10px; padding: 15px;
+    border-radius: 12px; cursor: pointer; transition: 0.2s; border: 1px solid transparent;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.craft-item:hover, .craft-item.active { background: #fff; border-color: var(--accent); transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+
+/* 蓝图头部 */
+.blueprint-header { border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+.blueprint-header h2 { margin: 0; color: var(--primary); font-size: 24px; }
+.bp-tag { font-size: 12px; padding: 4px 10px; background: #eee; border-radius: 6px; color: #666; margin-left: 10px; }
+.bp-tag.warning { background: #fff3cd; color: #856404; }
+
+/* 计算器控件 */
+.calc-control { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 12px; display: inline-flex; }
+.stepper { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+.stepper button { border: none; background: #f9f9f9; padding: 5px 15px; cursor: pointer; font-size: 18px; }
+.stepper button:hover { background: #eee; }
+.stepper input { border: none; width: 60px; text-align: center; font-size: 16px; outline: none; }
+
+/* 选项卡 */
+.bp-tabs { display: flex; gap: 20px; margin-bottom: 20px; border-bottom: 1px solid #eee; }
+.bp-tab { padding-bottom: 10px; cursor: pointer; color: #999; font-weight: bold; }
+.bp-tab.active { color: var(--accent); border-bottom: 3px solid var(--accent); }
+.bp-view { display: none; }
+.bp-view.active { display: block; animation: fadeIn 0.3s; }
+
+/* 材料网格 */
+.mat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; }
+.mat-card {
+    background: #fff; padding: 15px; border-radius: 10px; text-align: center;
+    border: 1px solid #eee; box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+.mat-icon { width: 40px; height: 40px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; background: #f4f4f4; border-radius: 50%; color: #666; }
+.mat-qty { font-size: 20px; font-weight: bold; color: var(--primary); }
+.mat-name { font-size: 12px; color: #888; margin-top: 5px; }
+
+/* 树状图 */
+.tree-node { margin-left: 20px; position: relative; padding: 5px 0; }
+.tree-node::before {
+    content: ''; position: absolute; left: -15px; top: 15px;
+    width: 12px; height: 1px; background: #ccc;
+}
+.tree-node::after {
+    content: ''; position: absolute; left: -15px; top: 0; bottom: 0;
+    width: 1px; background: #ccc;
+}
+.tree-node:last-child::after { bottom: auto; height: 15px; } /* 截断最后一条线 */
+
+.node-content {
+    display: inline-flex; align-items: center; padding: 6px 12px;
+    background: #fff; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;
+}
+.node-content.basic { border-left: 3px solid #81c784; } /* 绿色基础材料 */
+.node-content.inter { border-left: 3px solid #ffb74d; } /* 橙色中间件 */
+
+/* 手机适配 */
+@media (max-width: 768px) {
+    .craft-layout { flex-direction: column; display: block; overflow-y: auto; height: auto; }
+    .craft-sidebar { width: 100%; max-width: none; margin-bottom: 20px; max-height: 300px; overflow-y: auto; }
+    .craft-main { width: 100%; }
+    .blueprint-card { min-height: 500px; }
+}
+
 
     /* ---------------- 手机端地图工具 (侧滑抽屉) ---------------- */
     
