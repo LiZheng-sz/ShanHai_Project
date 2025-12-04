@@ -289,7 +289,6 @@ const app = {
 };
 
 
-
 // ---------------- 天工造物模块 ----------------
 
 let currentCraftItem = null;
@@ -443,7 +442,52 @@ app.switchBpTab = function(tabName) {
     document.getElementById('view-' + tabName).classList.add('active');
 };
 
-// 防盗措施//
+// ================= 手机端地图横屏切换 =================
+app.toggleLandscape = function() {
+    // 1. 优先尝试原生全屏 + 横屏锁定 (安卓体验最佳，触控正常)
+    if (document.documentElement.requestFullscreen && screen.orientation && screen.orientation.lock) {
+        // 如果已经在全屏/横屏模式，则退出
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+            screen.orientation.unlock();
+            return;
+        }
+        // 进入全屏并锁定横向
+        document.documentElement.requestFullscreen().then(() => {
+            screen.orientation.lock("landscape").catch(err => {
+                console.log("横屏锁定失败，转为CSS旋转:", err);
+                // 锁定失败（如权限问题），回退到 CSS 方案
+                toggleCssLandscape();
+            });
+        }).catch(err => {
+            // 全屏失败，回退到 CSS 方案
+            toggleCssLandscape();
+        });
+    } else {
+        // 2. iOS/不支持原生的设备：使用 CSS 强制旋转 (触控方向会反)
+        toggleCssLandscape();
+    }
+
+    // 内部工具函数：执行 CSS 旋转类切换
+    function toggleCssLandscape() {
+        const isLandscape = document.body.classList.toggle('is-landscape');
+        
+        // 提示 iOS 用户
+        if(isLandscape && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            // 您可以用一个更好看的 toast 替代 alert，或者删掉这行
+            // alert("提示：iOS强制横屏下，滑动方向可能会翻转，请以实际体验为准。");
+        }
+
+        // 重绘地图，防止灰屏
+        setTimeout(() => {
+            if (typeof map !== 'undefined' && map) {
+                map.invalidateSize();
+            }
+        }, 350);
+    }
+};
+
+// ————————防盗措施————————//
 document.addEventListener('contextmenu', function(e) {
     e.preventDefault();
 });

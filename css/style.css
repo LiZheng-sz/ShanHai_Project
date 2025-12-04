@@ -404,7 +404,7 @@ body.hovering #cursor-dot { opacity: 0; }
         border-bottom: 1px solid rgba(0,0,0,0.05); background: var(--bg-paper);
         position: sticky; top: 0; z-index: 50;
     }
-    .dex-tabs { display: none; 
+    .dex-tabs { display: none; }
 }
 
 /* --- 工坊新布局 --- */
@@ -489,8 +489,97 @@ body.hovering #cursor-dot { opacity: 0; }
     .blueprint-card { min-height: 500px; }
 }
 
+/** ------- 手机端地图组件 -------- **/
+/* --- 手机端地图横屏 --- */
 
-    /* ---------------- 手机端地图工具 (侧滑抽屉) ---------------- */
+/* 1. 横屏切换按钮样式 */
+.mobile-rotate-btn {
+    display: none; /* PC端隐藏 */
+}
+
+@media (max-width: 768px) {
+    .mobile-rotate-btn {
+        display: flex; justify-content: center; align-items: center;
+        position: absolute; top: 65px; right: 15px; z-index: 900;
+        width: 40px; height: 40px;
+        background: #fff; border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        border: 1px solid #eee;
+        color: var(--primary); font-size: 18px;
+        transition: 0.3s;
+    }
+    .mobile-rotate-btn:active { transform: scale(0.9); }
+
+    /* 2. 强制横屏的核心样式 */
+body.is-landscape {
+    overflow: hidden !important; /* 核心：禁止滚动条，防止露出背景 */
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%;
+    height: 100%;
+    background: #000; /* 将背景设为黑，即使有缝隙也看不出 */
+}
+
+/* 2. 地图容器强制覆盖 */
+body.is-landscape #map {
+    position: fixed !important;
+    top: 50% !important;     /* 先移动到屏幕中心 */
+    left: 50% !important;
+    
+    /* 强制使用 dvh/dvw 适配现代手机浏览器地址栏 */
+    width: 100dvh !important;  
+    height: 100dvw !important; 
+    
+    z-index: 99999;
+    background: #fff;
+    
+    /* 核心旋转算法：以中心点旋转，然后通过 margin 负值拉回正确位置 */
+    transform: translate(-50%, -50%) rotate(90deg);
+    transform-origin: center center;
+}
+
+/* 3. 隐藏横屏下的干扰元素 */
+body.is-landscape .navbar, 
+body.is-landscape .intro-gate,
+body.is-landscape .search-container {
+    display: none !important;
+}
+
+/* 4. 修正横屏下的按钮位置 (因为容器转了，按钮相对位置也变了) */
+body.is-landscape .mobile-map-btn { 
+    top: 20px; right: 20px; 
+    transform: rotate(-90deg); /* 让图标回正 */
+}
+body.is-landscape .mobile-rotate-btn { 
+    top: 20px; right: 70px;
+    transform: rotate(-90deg); /* 让图标回正 */
+}
+
+/* --- 地图容器专项修复 --- */
+
+/* 1. 去掉地图页面的默认内边距 */
+#map.view-section {
+    padding: 0 !important; /* 核心：干掉那40px的白边 */
+    overflow: hidden !important; /* 禁止出现滚动条 */
+    position: relative; /* 为内部的绝对定位提供基准 */
+}
+
+/* 2. 强制地图容器铺满，且绝对定位 */
+#map-container {
+    width: 100% !important;
+    height: 100% !important;
+    
+    /* 使用绝对定位，防止被其他看不见的元素挤下去 */
+    position: absolute !important; 
+    top: 0;
+    left: 0;
+    z-index: 1; /* 确保它在最底层 */
+    
+    margin: 0 !important;
+    border-radius: 0 !important; /* 手机端不需要圆角 */
+}
+
+    /* ---- 手机端地图侧滑抽屉 ----- */
     
     /* 1. 显示悬浮按钮 */
     .mobile-map-btn {
@@ -539,4 +628,61 @@ body.hovering #cursor-dot { opacity: 0; }
     
     /* 强制地图全屏 */
     #map-container { height: 100vh !important; border-radius: 0; }
+}
+/* =============================================
+   横屏弹窗修复补丁
+   ============================================= */
+
+/* 当进入横屏模式时，强制弹窗也进行旋转和层级提升 */
+body.is-landscape #marker-modal-overlay {
+    /* 1. 核心修复：层级必须比地图(99999)更高 */
+    z-index: 200000 !important; 
+    
+    /* 2. 旋转逻辑：与地图保持一致 */
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    
+    /* 强制宽高互换，适配横屏视野 */
+    width: 100dvh !important;
+    height: 100dvw !important;
+    
+    /* 旋转90度，这样用户不用歪头看弹窗 */
+    transform: translate(-50%, -50%) rotate(90deg) !important;
+    transform-origin: center center !important;
+    
+    /* 确保背景遮罩能盖住全屏 */
+    background: rgba(44, 37, 32, 0.6) !important;
+}
+
+/* 3. 优化横屏下的弹窗尺寸，防止太挤 */
+body.is-landscape .modal-card {
+    width: 60% !important;  /* 横屏宽敞，卡片可以宽一点 */
+    max-height: 80% !important; /* 防止高度溢出 */
+}
+/* =============================================
+   按钮位置人性化优化
+   ============================================= */
+
+/* 1. 图层按钮：大幅下移，避开刘海屏，拇指更易按到 */
+.mobile-map-btn {
+    top: 170px !important;  /* 原来是15px，现在下移到110px */
+    right: 18px !important; /* 保持靠右 */
+}
+
+/* 2. 横屏按钮：保持间距，跟在图层按钮下面 */
+.mobile-rotate-btn {
+    top: 220px !important;  /* 保持 60px 的间距 */
+    right: 18px !important;
+}
+
+/* 3. 修正：防止这些改动影响到“横屏模式”下的布局 */
+/* (横屏时因为屏幕旋转了，按钮需要贴回边缘，否则会跑到屏幕中间去) */
+body.is-landscape .mobile-map-btn { 
+    top: 20px !important; 
+    right: 20px !important; 
+}
+body.is-landscape .mobile-rotate-btn { 
+    top: 20px !important; 
+    right: 70px !important;
 }

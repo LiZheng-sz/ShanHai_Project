@@ -76,7 +76,7 @@ function initMap() {
     L.imageOverlay('assets/山海大陆地图.png', bounds).addTo(map); 
     
     // ✅ 设置默认视图：中心点 [150, 680]，缩放等级 1 (放大效果)
-    map.setView([150, 680], 1); 
+    map.setView([140, 700], 0.8); 
 
     // 初始化图层组
     Object.keys(MARKER_TYPES).forEach(k => layerGroups[k] = L.layerGroup().addTo(map));
