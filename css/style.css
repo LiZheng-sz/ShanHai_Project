@@ -686,3 +686,184 @@ body.is-landscape .mobile-rotate-btn {
     top: 20px !important; 
     right: 70px !important;
 }
+/* ==================== 新闻视图适配样式 (新增) ==================== *
+/* 1. 视图容器调整：让它能容纳原来的大卡片 */
+#news-view {
+    padding: 40px 20px !important; /* 保持一定的内边距 */
+    background: transparent !important; /* 确保背景透明，透出主页的粒子特效 */
+}
+
+/* 2. 隐藏新闻页自带的导航栏 (防止双重导航) */
+#news-content-area .navbar,
+#news-content-area .logo,
+#news-content-area #intro-gate, 
+#news-content-area #cursor-dot,
+#news-content-area #cursor-outline,
+#news-content-area script {
+    display: none !important;
+}
+
+/* 3. 文章容器：还原边距和宽度 */
+.article-wrapper {
+    max-width: 800px;
+    margin: 0 auto !important; /* 在视图里居中 */
+    position: relative;
+    z-index: 10;
+}
+
+/* 4. 文章卡片：核心视觉还原 (阴影、磨砂、圆角) */
+.article-card {
+    /* 还原高不透明度和磨砂感 */
+    background: rgba(255, 255, 255, 0.95) !important; 
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 50px !important; /* 还原大内边距 */
+    
+    /* 还原原本的投影，让卡片浮起来 */
+    box-shadow: 0 20px 60px rgba(44, 37, 32, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 50px; /* 底部留白 */
+}
+
+/* 5. ★★★ 关键修复：还原卡片顶部的彩色渐变线条 ★★★ */
+.article-card::before {
+    content: ''; 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 6px;
+    /* 使用原本的金色渐变 */
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    display: block !important;
+}
+
+/* 6. 文章标题与排版 */
+.article-header { 
+    text-align: center; 
+    margin-bottom: 40px; 
+    border-bottom: 2px dashed #eee; 
+    padding-bottom: 30px; 
+}
+
+.article-title { 
+    font-family: var(--font-title); 
+    font-size: 36px; 
+    color: var(--primary); 
+    margin-bottom: 15px; 
+    line-height: 1.4;
+}
+
+.article-meta { 
+    color: #888; 
+    font-size: 13px; 
+    display: flex; 
+    justify-content: center; 
+    gap: 20px; 
+}
+
+/* 7. 正文内容样式 */
+.article-content { 
+    font-size: 16px; 
+    line-height: 1.8; 
+    color: #444; 
+}
+
+.article-content h3 { 
+    color: var(--primary); 
+    border-left: 4px solid var(--accent); 
+    padding-left: 12px; 
+    margin-top: 40px; 
+    font-size: 20px; 
+    font-weight: bold;
+}
+
+.article-content img { 
+    max-width: 100%; 
+    border-radius: 12px; 
+    margin: 20px 0; 
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+    border: 1px solid #eee; 
+}
+
+.article-content ul { 
+    background: #fdfbf5; 
+    padding: 20px 20px 20px 40px; 
+    border-radius: 12px; 
+    border: 1px solid #f0eee5; 
+}
+
+.article-content li { 
+    margin-bottom: 10px; 
+}
+
+.article-content blockquote {
+    background: #fff8e1;
+    border-left: 4px solid #d4af37;
+    margin: 20px 0;
+    padding: 15px;
+    color: #8d6e63;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* 8. 手机端适配调整 */
+@media (max-width: 768px) {
+    .article-card { padding: 25px !important; }
+    .article-title { font-size: 24px; }
+}
+
+/* === 工坊顶部切换条 === */
+.craft-tabs-top { display: flex; gap: 10px; margin-bottom: 15px; }
+.c-tab {
+    flex: 1; text-align: center; padding: 12px; background: rgba(255,255,255,0.6);
+    border-radius: 12px; cursor: pointer; color: #666; font-weight: bold;
+    border: 1px solid transparent; transition: 0.3s; position: relative;
+}
+.c-tab.active { background: #fff; color: var(--primary); border-color: var(--accent); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+.c-tab:hover { background: #fff; }
+
+/* 购物车红点 */
+.cart-badge {
+    position: absolute; top: -5px; right: 20px;
+    background: #ff4757; color: #fff; font-size: 10px; 
+    padding: 2px 6px; border-radius: 10px;
+}
+
+/* 视图切换 */
+.craft-view-panel { display: none; height: 100%; }
+.craft-view-panel.active { display: block; animation: fadeIn 0.3s; }
+
+/* 加入清单按钮 */
+.calc-control-group { display: flex; gap: 15px; align-items: stretch; margin-bottom: 25px; background:rgba(255,255,255,0.9); padding:15px; border-radius:12px; }
+.calc-control { margin-bottom: 0; background: none; padding: 0; border-radius: 0; }
+.btn-add-cart {
+    flex: 1; border: none; background: var(--primary); color: var(--accent);
+    border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;
+}
+.btn-add-cart:active { transform: scale(0.98); }
+
+/* === 购物车样式 === */
+.cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.btn-clear { background: transparent; border: 1px solid #ddd; padding: 5px 10px; border-radius: 6px; cursor: pointer; color: #888; font-size: 12px; }
+.btn-clear:hover { border-color: #ff6b6b; color: #ff6b6b; }
+
+.cart-items-box { max-height: 250px; overflow-y: auto; margin-bottom: 20px; border: 1px solid #f0f0f0; border-radius: 10px; background: #f9f9f9; padding: 10px; }
+.cart-row {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #fff; padding: 10px 15px; margin-bottom: 8px; border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+.cart-row-name { font-weight: bold; color: var(--primary); }
+.cart-row-ctrl { display: flex; align-items: center; gap: 10px; }
+.cart-del-btn { color: #ccc; cursor: pointer; padding: 5px; }
+.cart-del-btn:hover { color: #ff4757; }
+
+/* 手机端适配修正 */
+@media (max-width: 768px) {
+    .calc-control-group { flex-direction: column; }
+    .btn-add-cart { padding: 12px; }
+}

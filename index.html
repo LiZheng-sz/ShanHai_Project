@@ -50,7 +50,7 @@
                     <div class="hero-overlay"></div>
                     <div class="hero-content">
                         <h1 style="margin:0 0 10px 0; font-size:32px; color:var(--accent);">欢迎回到山海大陆</h1>
-                        <p style="margin:0; opacity:0.9; font-size:16px;">捕捉啾灵，记录奇迹 | 当前版本 v3.4</p>
+                        <p style="margin:0; opacity:0.9; font-size:16px;">现已开放预约，点击前往官方预约通道 | 当前版本 v3.4</p>
                     </div>
                     <div class="hero-icon" style="font-size:100px; color:rgba(255,255,255,0.3); transform: rotate(-15deg); z-index: 2;">
                         <i class="fa-solid fa-scroll"></i>
@@ -65,7 +65,7 @@
                         </div>
                         <div class="news-list" id="news-container"></div>
                     </div>
-
+        
                     <div class="panel-box">
                         <div class="panel-header" style="margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
                             <span style="font-size:18px; font-weight:bold; color:var(--primary);"><i class="fa-solid fa-chart-pie" style="color:var(--accent); margin-right:8px;"></i> 观测报告</span>
@@ -92,6 +92,14 @@
             </div>
         </div>
 
+        <div id="news-view" class="view-section">
+            <div onclick="app.closeNews()" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; color: var(--primary); font-weight: bold; font-size: 16px; padding: 10px 0;">
+                 <i class="fa-solid fa-arrow-left"></i> 返回首页
+            </div>
+            
+            <div id="news-content-area"></div>
+        </div>
+
         <div id="dex" class="view-section">
             <div class="search-container">
                 <input type="text" class="glass-input" id="dexSearch" placeholder="搜索啾灵名称..." oninput="filterDex()">
@@ -102,6 +110,10 @@
                     <option value="水">水系</option>
                     <option value="火">火系</option>
                     <option value="土">土系</option>
+                    <option value="冰">冰系</option>
+                    <option value="龙">龙系</option>
+                    <option value="妖">妖系</option>
+                    <option value="无">无属性</option>
                 </select>
             </div>
 
@@ -150,14 +162,12 @@
                             </div>
 
                             <div class="desc-footer">
-                                <div class="catch-rate">
-                                    <span class="label">稀有度:</span>
-                                    <div class="pokeballs">
-                                        <i class="fa-regular fa-circle-check" style="color:#aaa;"></i>
-                                        <i class="fa-regular fa-circle-check" style="color:#aaa;"></i>
-                                        <i class="fa-regular fa-circle-check" style="color:#aaa;"></i>
-                                    </div>
+                                <div class="catch-rate" style="display:block;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                <span class="label">属性克制:</span>
+                                <div id="detail-relation-area" style="flex:1; margin-left:20px;"></div>
                                 </div>
+                            </div>
+
                                 <div class="desc-text-box">
                                     <p id="detail-desc">这里是描述文本...</p>
                                 </div>
@@ -178,21 +188,34 @@
         </div>
 
         <div class="craft-main">
-            <div id="blueprint-panel" class="blueprint-card">
-                <div class="empty-state-craft">
-                    <i class="fa-solid fa-compass-drafting" style="font-size: 48px; margin-bottom: 20px; color:#ddd;"></i>
-                    <p>选择左侧配方进行解析</p>
-                </div>
-                
-                <div id="craft-detail-content" style="display:none;">
-                    <div class="blueprint-header">
-                        <h2 id="bp-name">物品名称</h2>
-                        <div class="bp-meta">
-                            <span id="bp-type" class="bp-tag">类型</span>
-                            <span id="bp-yield" class="bp-tag warning">产量: 1</span>
-                        </div>
-                    </div>
+    
+    <div class="craft-tabs-top">
+        <div class="c-tab active" onclick="app.switchCraftMode('lookup')" id="c-tab-lookup">
+            <i class="fa-solid fa-magnifying-glass"></i> 配方检索
+        </div>
+        <div class="c-tab" onclick="app.switchCraftMode('cart')" id="c-tab-cart">
+            <i class="fa-solid fa-cart-shopping"></i> 筹备清单
+            <span class="cart-badge" id="cart-badge" style="display:none">0</span>
+        </div>
+    </div>
 
+    <div id="view-craft-lookup" class="craft-view-panel active">
+        <div id="blueprint-panel" class="blueprint-card">
+            <div class="empty-state-craft">
+                <i class="fa-solid fa-compass-drafting" style="font-size: 48px; margin-bottom: 20px; color:#ddd;"></i>
+                <p>点击左侧列表查看配方</p>
+            </div>
+            
+            <div id="craft-detail-content" style="display:none;">
+                <div class="blueprint-header">
+                    <h2 id="bp-name">物品名称</h2>
+                    <div class="bp-meta">
+                        <span id="bp-type" class="bp-tag">类型</span>
+                        <span id="bp-yield" class="bp-tag warning">产量: 1</span>
+                    </div>
+                </div>
+
+                <div class="calc-control-group">
                     <div class="calc-control">
                         <label>制作数量:</label>
                         <div class="stepper">
@@ -201,23 +224,51 @@
                             <button onclick="app.updateCraftCalc(1)">+</button>
                         </div>
                     </div>
+                    <button class="btn-add-cart" onclick="app.addToCart()">
+                        <i class="fa-solid fa-plus"></i> 加入清单
+                    </button>
+                </div>
 
-                    <div class="blueprint-body">
-                        <div class="bp-tabs">
-                            <div class="bp-tab active" onclick="app.switchBpTab('raw')" id="tab-raw">基础材料统计</div>
-                            <div class="bp-tab" onclick="app.switchBpTab('tree')" id="tab-tree">合成树状图</div>
-                        </div>
-
-                        <div id="view-raw" class="bp-view active">
-                            <div id="raw-mat-list" class="mat-grid"></div>
-                        </div>
-
-                        <div id="view-tree" class="bp-view">
-                            <div id="tree-container" class="tree-wrapper"></div>
-                        </div>
+                <div class="blueprint-body">
+                    <div class="bp-tabs">
+                        <div class="bp-tab active" onclick="app.switchBpTab('raw')" id="tab-raw">单件材料</div>
+                        <div class="bp-tab" onclick="app.switchBpTab('tree')" id="tab-tree">合成树</div>
+                    </div>
+                    <div id="view-raw" class="bp-view active">
+                        <div id="raw-mat-list" class="mat-grid"></div>
+                    </div>
+                    <div id="view-tree" class="bp-view">
+                        <div id="tree-container" class="tree-wrapper"></div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="view-craft-cart" class="craft-view-panel">
+        <div class="blueprint-card">
+            <div class="cart-header">
+                <h3><i class="fa-solid fa-clipboard-list"></i> 待制作物品</h3>
+                <button class="btn-clear" onclick="app.clearCart()">清空清单</button>
+            </div>
+            
+            <div id="cart-list-container" class="cart-items-box">
+                <div style="text-align:center; color:#999; padding:40px;">
+                    清单是空的，快去左侧添加配方吧~
+                </div>
+            </div>
+
+            <div class="total-mats-area">
+                <h3 style="margin-bottom:15px; border-top:2px dashed #eee; padding-top:20px;">
+                    <i class="fa-solid fa-cubes-stacked"></i> 
+                    总计原材料需求
+                    <span style="font-size:12px; font-weight:normal; color:#888;">(所有物品汇总)</span>
+                </h3>
+                <div id="cart-total-mats" class="mat-grid"></div>
+            </div>
+                  </div>
+              </div>
+
         </div>
     </div>
 </div>
