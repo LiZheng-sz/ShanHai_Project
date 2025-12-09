@@ -101,9 +101,11 @@
         </div>
 
         <div id="dex" class="view-section">
-            <div class="search-container">
-                <input type="text" class="glass-input" id="dexSearch" placeholder="搜索啾灵名称..." oninput="filterDex()">
-                <select class="glass-select" id="dexFilter" onchange="filterDex()" data-hover>
+    <div class="dex-layout-container">
+        <div class="dex-sidebar">
+            <div class="sidebar-header" style="padding: 15px; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                <input type="text" class="glass-input" id="dexSearch" placeholder="搜名字..." oninput="app.filterDex()" style="width: 100%; margin-bottom: 10px; padding: 10px;">
+                <select class="glass-select" id="dexFilter" onchange="app.filterDex()" style="width: 100%; padding: 8px;">
                     <option value="all">全属性</option>
                     <option value="金">金系</option>
                     <option value="木">木系</option>
@@ -113,70 +115,71 @@
                     <option value="冰">冰系</option>
                     <option value="龙">龙系</option>
                     <option value="妖">妖系</option>
-                    <option value="无">无属性</option>
                 </select>
             </div>
+            
+            <div class="dex-list" id="dex-list"></div>
+        </div>
 
-            <div class="dex-layout-container">
-                <div class="dex-sidebar">
-                    <div class="dex-list" id="dex-list"></div>
+        <div class="dex-main-content">
+            <div class="mobile-back-btn" onclick="backToDexList()">
+                   <i class="fa-solid fa-arrow-left"></i> 返回列表
+            </div>
+            <div class="dex-tabs">
+                <div class="dex-tab" onclick="app.jumpToLocation()" style="cursor: pointer;">
+                    <i class="fa-solid fa-map-location-dot"></i> 分布地区
                 </div>
+                <div class="dex-tab active">形态特征</div>
+            </div>
 
-                <div class="dex-main-content">
-                    <div class="mobile-back-btn" onclick="backToDexList()">
-                           <i class="fa-solid fa-arrow-left"></i> 返回列表
+            <div class="dex-detail-card" id="dex-detail-view">
+                <div class="empty-state">请在左侧选择一只啾灵查看详情</div>
+                
+                <div class="detail-grid" style="display:none;" id="detail-content">
+                    <div class="visual-area">
+                        <div class="visual-circle"></div> 
+                        <img src="" alt="" class="creature-big-img" id="detail-img">
+                        <div class="bg-deco-text">NO.<span id="detail-id">000</span></div>
                     </div>
-                    <div class="dex-tabs">
-                        <div class="dex-tab">分布地区</div>
-                        <div class="dex-tab active">形态特征</div>
+
+                    <div class="info-panel">
+                        <div class="info-header">
+                            <h2 id="detail-name">啾灵名称</h2>
+                            <div class="element-group" id="detail-element" style="display: flex; gap: 5px;"></div>
+                        </div>
+                        <div class="info-section">
+                            <label>工作适应性:</label>
+                            <div class="work-icons" id="detail-work"></div>
+                        </div>
+                        <div class="info-section">
+                            <label>立正锐评:</label>
+                            <div class="drop-items" id="detail-drops"></div>
+                        </div>
                     </div>
 
-                    <div class="dex-detail-card" id="dex-detail-view">
-                        <div class="empty-state">请在左侧选择一只啾灵查看详情</div>
-                        
-                        <div class="detail-grid" style="display:none;" id="detail-content">
-                            <div class="visual-area">
-                                <div class="visual-circle"></div> <img src="" alt="" class="creature-big-img" id="detail-img">
-                                <div class="bg-deco-text">NO.<span id="detail-id">000</span></div>
-                            </div>
+                    <div class="desc-footer">
+                        <div class="catch-rate" style="display:block;"> 
+                            <div id="detail-relation-area" style="width:100%;"></div>
+                        </div>
 
-                            <div class="info-panel">
-                                <div class="info-header">
-                                    <h2 id="detail-name">啾灵名称</h2>
-                                    <div class="element-badge" id="detail-element"><i class="fa-solid fa-fire"></i></div>
-                                </div>
-                                <div class="info-row">
-                                    <label>职业:</label>
-                                    <div class="role-tag" id="detail-role">
-                                        <i class="fa-solid fa-fist-raised"></i> 输出
-                                    </div>
-                                </div>
-                                <div class="info-section">
-                                    <label>工作适应性:</label>
-                                    <div class="work-icons" id="detail-work"></div>
-                                </div>
-                                <div class="info-section">
-                                    <label>立正锐评:</label>
-                                    <div class="drop-items" id="detail-drops"></div>
-                                </div>
-                            </div>
+                        <div class="desc-text-box">
+                            <p id="detail-desc">这里是描述文本...</p>
+                        </div>
 
-                            <div class="desc-footer">
-                                <div class="catch-rate" style="display:block;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                                <span class="label">属性克制:</span>
-                                <div id="detail-relation-area" style="flex:1; margin-left:20px;"></div>
-                                </div>
-                            </div>
-
-                                <div class="desc-text-box">
-                                    <p id="detail-desc">这里是描述文本...</p>
-                                </div>
-                            </div>
+                        <div class="dex-nav-actions" style="margin-top: 20px; display: flex; justify-content: space-between; gap: 15px;">
+                            <button class="btn btn-primary" onclick="app.switchSpirit(-1)" style="flex:1;">
+                                <i class="fa-solid fa-arrow-left"></i> 上一只
+                            </button>
+                            <button class="btn btn-primary" onclick="app.switchSpirit(1)" style="flex:1;">
+                                下一只 <i class="fa-solid fa-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
 <div id="craft" class="view-section">
     <div class="craft-layout">
@@ -285,39 +288,53 @@
         <i class="fa-solid fa-mobile-screen-button"></i>
     </div>
 
-    <div class="map-layer-control" id="map-controls" style="z-index: 1000;">
-        <div class="control-header-mobile">
-            <span>地图工具</span>
-            <i class="fa-solid fa-times" onclick="toggleMapControls()"></i>
-        </div>
+<div class="map-layer-control" id="map-controls" style="z-index: 1000;">
+    <div class="control-header-mobile">
+        <span>地图工具</span>
+        <i class="fa-solid fa-times" onclick="toggleMapControls()"></i>
+    </div>
 
-        <div class="control-section">
-            <div class="section-title">图层筛选</div>
-            <div class="layer-toggle active" onclick="toggleLayer('orb', this)" data-hover>
-                <img src="assets/orb.png"> 灵珠
-            </div>
-            <div class="layer-toggle active" onclick="toggleLayer('chest', this)" data-hover>
-                <img src="assets/chest.png"> 宝箱
-            </div>
-            <div class="layer-toggle active" onclick="toggleLayer('teleport', this)" data-hover>
-                <img src="assets/teleport.png"> 传送点
-            </div>
-            <div class="layer-toggle active" onclick="toggleLayer('user', this)" data-hover>
-                <img src="assets/user.png"> 野外boss
-            </div>
-        </div>
-
-        <div class="control-section" style="border-top: 1px dashed #ddd; margin-top: 10px; padding-top: 10px;">
-            <div class="section-title">数据管理</div>
-            <div class="layer-toggle" onclick="exportMapData()" data-hover>
-                <i class="fa-solid fa-download"></i> 导出备份
-            </div>
-            <div class="layer-toggle" onclick="triggerImport()" data-hover>
-                <i class="fa-solid fa-upload"></i> 导入数据
-            </div>
-            <input type="file" id="import-input" style="display: none;" accept=".json" onchange="importMapData(this)">
+    <div class="control-section" style="margin-bottom: 10px;">
+        <div class="search-wrapper" style="position: relative;">
+            <input type="text" id="map-inner-search" class="glass-input" 
+                   placeholder="搜点位 (如: 草猿山)..." 
+                   oninput="searchMapLocation(this.value)"
+                   style="padding: 8px 30px 8px 10px; font-size: 13px; width: 100%;">
+            <i class="fa-solid fa-search" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #999; font-size: 12px;"></i>
         </div>
     </div>
+
+    <div class="control-section">
+        <div class="section-title">
+            图层筛选 <span style="font-weight:normal; font-size:10px; color:#ccc; margin-left:5px;">(双击图标只看此项)</span>
+        </div>
+        
+        <div class="layer-toggle active" onclick="toggleLayer('orb', this)" ondblclick="isolateLayer('orb')" data-hover title="双击只看灵珠">
+            <img src="assets/orb.png"> 灵珠
+        </div>
+        <div class="layer-toggle active" onclick="toggleLayer('chest', this)" ondblclick="isolateLayer('chest')" data-hover title="双击只看宝箱">
+            <img src="assets/chest.png"> 宝箱
+        </div>
+        <div class="layer-toggle active" onclick="toggleLayer('teleport', this)" ondblclick="isolateLayer('teleport')" data-hover title="双击只看传送点">
+            <img src="assets/teleport.png"> 传送点
+        </div>
+        <div class="layer-toggle active" onclick="toggleLayer('user', this)" ondblclick="isolateLayer('user')" data-hover title="双击只看BOSS">
+            <img src="assets/user.png"> 野外boss
+        </div>
+    </div>
+
+    <div class="control-section" style="border-top: 1px dashed #ddd; margin-top: 10px; padding-top: 10px;">
+        <div class="section-title">数据管理</div>
+        <div class="layer-toggle" onclick="exportMapData()" data-hover>
+            <i class="fa-solid fa-download"></i> 导出备份
+        </div>
+        <div class="layer-toggle" onclick="triggerImport()" data-hover>
+            <i class="fa-solid fa-upload"></i> 导入数据
+        </div>
+        <input type="file" id="import-input" style="display: none;" accept=".json" onchange="importMapData(this)">
+    </div>
+</div>
+
 </div>
 
         <div id="breed" class="view-section">
